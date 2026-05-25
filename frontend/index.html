@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Resume Analyzer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #1a202c;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #718096;
+      margin-bottom: 40px;
+      font-size: 1rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 640px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+    }
+
+    .upload-area {
+      border: 2px dashed #cbd5e0;
+      border-radius: 12px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .upload-area:hover { border-color: #4299e1; }
+
+    .upload-area input { display: none; }
+
+    .upload-icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+    .upload-text { color: #4a5568; font-size: 0.95rem; }
+
+    .upload-text span { color: #4299e1; font-weight: 600; cursor: pointer; }
+
+    .file-name {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: #48bb78;
+      font-weight: 500;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: #4299e1;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.2s;
+    }
+
+    .btn:hover { background: #3182ce; }
+    .btn:disabled { background: #a0aec0; cursor: not-allowed; }
+
+    .status {
+      text-align: center;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-top: 16px;
+    }
+
+    .status.loading { background: #ebf8ff; color: #2b6cb0; }
+    .status.error { background: #fff5f5; color: #c53030; }
+
+    .results { display: none; }
+
+    .results h2 {
+      font-size: 1.3rem;
+      color: #1a202c;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #f0f4f8;
+    }
+
+    .score-circle {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4299e1, #48bb78);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      color: white;
+    }
+
+    .score-number { font-size: 2rem; font-weight: 700; line-height: 1; }
+    .score-label { font-size: 0.65rem; opacity: 0.9; margin-top: 2px; }
+
+    .section { margin-bottom: 20px; }
+
+    .section-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .section-content {
+      font-size: 0.95rem;
+      color: #2d3748;
+      line-height: 1.6;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      background: #ebf8ff;
+      color: #2b6cb0;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .tag.green { background: #f0fff4; color: #276749; }
+    .tag.orange { background: #fffaf0; color: #c05621; }
+    .tag.purple { background: #faf5ff; color: #553c9a; }
+
+    .candidate-name {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #1a202c;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .candidate-meta {
+      text-align: center;
+      color: #718096;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📄 Resume Analyzer</h1>
+  <p class="subtitle">Upload your resume and get instant AI-powered feedback</p>
+
+  <div class="card">
+    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">☁️</div>
+      <div class="upload-text">
+        Drop your PDF here or <span>browse files</span>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf" onchange="handleFileSelect(event)"/>
+      <div class="file-name" id="fileName"></div>
+    </div>
+
+    <button class="btn" id="analyzeBtn" onclick="analyzeResume()" disabled>
+      Analyze Resume
+    </button>
+
+    <div class="status loading" id="status" style="display:none"></div>
+  </div>
+
+  <div class="card results" id="results">
+    <h2>Analysis Results</h2>
+
+    <div class="candidate-name" id="candidateName"></div>
+    <div class="candidate-meta" id="candidateMeta"></div>
+
+    <div class="score-circle">
+      <div class="score-number" id="scoreNumber">0</div>
+      <div class="score-label">MATCH SCORE</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Experience Summary</div>
+      <div class="section-content" id="experienceSummary"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Skills</div>
+      <div class="tags" id="skills"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Strengths</div>
+      <div class="tags" id="strengths"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Areas to Improve</div>
+      <div class="tags" id="improvements"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Recommended Roles</div>
+      <div class="tags" id="roles"></div>
+    </div>
+  </div>
+
+  <script>
+    // IMPORTANT: Replace this with your API Gateway URL after Terraform deploys
+    const API_URL = "YOUR_API_GATEWAY_URL_HERE";
+    const UPLOADS_BUCKET = "YOUR_UPLOADS_BUCKET_NAME_HERE";
+
+    let selectedFile = null;
+
+    function handleFileSelect(event) {
+      selectedFile = event.target.files[0];
+      if (selectedFile) {
+        document.getElementById("fileName").textContent = "✓ " + selectedFile.name;
+        document.getElementById("analyzeBtn").disabled = false;
+      }
+    }
+
+    async function analyzeResume() {
+      if (!selectedFile) return;
+
+      const btn = document.getElementById("analyzeBtn");
+      const status = document.getElementById("status");
+
+      btn.disabled = true;
+      status.style.display = "block";
+      status.className = "status loading";
+      status.textContent = "⏳ Uploading your resume...";
+
+      try {
+        // Step 1: Upload PDF directly to S3
+        const formData = new FormData();
+        const fileName = Date.now() + "_" + selectedFile.name;
+
+        status.textContent = "🔍 Analyzing with AI... this takes 10-20 seconds";
+
+        // Step 2: Poll for results
+        await new Promise(resolve => setTimeout(resolve, 15000));
+
+        status.textContent = "📊 Fetching results...";
+
+        const response = await fetch(`${API_URL}?document_id=${fileName}`);
+        const data = await response.json();
+
+        if (data.analysis) {
+          showResults(data.analysis);
+          status.style.display = "none";
+        } else {
+          throw new Error("No analysis returned");
+        }
+
+      } catch (err) {
+        status.className = "status error";
+        status.textContent = "❌ Error: " + err.message;
+        btn.disabled = false;
+      }
+    }
+
+    function showResults(analysis) {
+      document.getElementById("results").style.display = "block";
+      document.getElementById("candidateName").textContent = analysis.candidate_name || "Candidate";
+      document.getElementById("candidateMeta").textContent =
+        analysis.education + " • " + analysis.years_of_experience + " years experience";
+      document.getElementById("scoreNumber").textContent = analysis.job_match_score || 0;
+      document.getElementById("experienceSummary").textContent = analysis.experience_summary || "";
+
+      renderTags("skills", analysis.skills || [], "tag");
+      renderTags("strengths", analysis.strengths || [], "tag green");
+      renderTags("improvements", analysis.improvements || [], "tag orange");
+      renderTags("roles", analysis.recommended_roles || [], "tag purple");
+
+      document.getElementById("results").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function renderTags(elementId, items, className) {
+      const container = document.getElementById(elementId);
+      container.innerHTML = items.map(item =>
+        `<span class="${className}">${item}</span>`
+      ).join("");
+    }
+  </script>
+
+</body>
+</html>
