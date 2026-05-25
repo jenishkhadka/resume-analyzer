@@ -1,0 +1,31 @@
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+*.tfvars
+.terraform.lock.hcl
+lambda.zip
+
+# Python - don't commit these to GitHub
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Lambda dependencies - reinstalled via pip
+lambda/pypdf/
+lambda/pypdf-6.12.1.dist-info/
+lambda/typing_extensions.py
+lambda/typing_extensions-4.15.0.dist-info/
+lambda/__pycache__/
+
+# AWS
+*.pem
+credentials
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+desktop.ini
